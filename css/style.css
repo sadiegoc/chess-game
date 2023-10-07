@@ -1,0 +1,9 @@
+body { background-color: #302e2b; }
+#game { margin: auto; width: 512px; }
+#game p { font-weight: bold; color: white; font-family: 'Courier New', Courier, monospace; }
+#gameboard { margin: auto; width: 512px; height: 512px; display: flex; flex-wrap: wrap; }
+.square { width: 64px; height: 64px; position: relative; }
+.square img { width: 60px; margin: 2px; }
+.piece { position: relative; }
+.sq-white { background-color: #EBECD0; }
+.sq-black { background-color: #779556; }
