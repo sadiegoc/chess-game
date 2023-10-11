@@ -1,8 +1,5 @@
 const gameBoard = document.querySelector('#gameboard')
-const WIDTH = 512
-const HEIGHT = WIDTH
-const DIMENSION = 8
-const SQ_SIZE = HEIGHT / DIMENSION
+const playerDisplay = document.querySelector("#player");
 const IMAGES = {}
 
 class Move {
@@ -60,26 +57,26 @@ class GameState {
     }
 
     // todos os movimentos sem considerar os checks
-    getAllPossibleMoves() {
+    getAllPossibleMoves () {
         let moves = []
         this.board.forEach((row, r)=> {
             row.forEach((col, c) => {
                 const turn = this.board[r][c][0]
                 if((turn == 'w' && this.whiteToMove) || (turn == 'b' && !this.whiteToMove)) {
                     const piece = this.board[r][c][1]
-                    if (piece == 'p') { moves.push(this.getPawnMoves(r, c)) }
-                    else if (piece == 'R') { moves.push(this.getRookMoves(r, c)) }
-                    // else if (piece == 'N') { this.getRookMoves(col, moves) }
-                    else if (piece == 'B') { moves.push(this.getBishopMoves(r, c)) }
-                    // else if (piece == 'Q') { this.getRookMoves(col, moves) }
-                    // else if (piece == 'K') { this.getRookMoves(col, moves) }
+                    if (piece == 'p')      { moves.push( this.getPawnMoves(r, c))   }
+                    else if (piece == 'R') { moves.push( this.getRookMoves(r, c))   }
+                    else if (piece == 'N') { moves.push( this.getKnightMoves(r, c)) }
+                    else if (piece == 'B') { moves.push( this.getBishopMoves(r, c)) }
+                    else if (piece == 'Q') { moves.push( this.getQueenMoves(r, c))  }
+                    else if (piece == 'K') { moves.push( this.getKingMoves(r, c))   }
                 }
             })
         })
         return moves
     }
 
-    getPawnMoves(r, c) {
+    getPawnMoves (r, c) {
         let movesPawn = []
         if(this.whiteToMove) { // white moves
 
@@ -121,10 +118,10 @@ class GameState {
         return movesPawn
     }
 
-    getRookMoves(r, c) {
+    getRookMoves (r, c) {
         let movesRook = []
         const directions = [[-1, 0], [0, -1], [1, 0], [0, 1]]
-        const enemyColor = this.whiteToMove ? 'b' : 'w'
+        const allyColor = this.whiteToMove ? 'w' : 'b'
 
         directions.forEach(d => {
             for (let i = 1; i < 8; i++) {
@@ -132,9 +129,7 @@ class GameState {
                 let endCol = c + (d[1] * i)
                 if ((0 <= endRow && endRow < 8) && (0 <= endCol && endCol < 8)) {
                     let endPiece = this.board[endRow][endCol]
-                    if (endPiece == '')
-                        movesRook.push(new Move([r, c], [endRow, endCol], this.board))
-                    if (endPiece[0] == enemyColor)
+                    if (endPiece[0] != allyColor)
                         movesRook.push(new Move([r, c], [endRow, endCol], this.board))
                 }
             }
@@ -143,10 +138,10 @@ class GameState {
         return movesRook
     }
 
-    getBishopMoves(r, c) {
+    getBishopMoves (r, c) {
         let movesBishop = []
         const directions = [[-1, -1], [-1, 1], [1, -1], [1, 1]]
-        const enemyColor = this.whiteToMove ? 'b' : 'w'
+        const allyColor = this.whiteToMove ? 'w' : 'b'
 
         directions.forEach(d => {
             for (let i = 1; i < 8; i++) {
@@ -154,9 +149,7 @@ class GameState {
                 let endCol = c + (d[1] * i)
                 if ((0 <= endRow && endRow < 8) && (0 <= endCol && endCol < 8)) {
                     let endPiece = this.board[endRow][endCol]
-                    if (endPiece == '')
-                        movesBishop.push(new Move([r, c], [endRow, endCol], this.board))
-                    if (endPiece[0] == enemyColor)
+                    if (endPiece[0] != allyColor)
                         movesBishop.push(new Move([r, c], [endRow, endCol], this.board))
                 }
             }
@@ -164,12 +157,51 @@ class GameState {
 
         return movesBishop
     }
+
+    getKnightMoves (r, c) {
+        let movesKnight = []
+        const knightMoves = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]]
+        const allyColor = this.whiteToMove ? 'w' : 'b'
+        knightMoves.forEach(move => {
+            let endRow = r + move[0]
+            let endCol = c + move[1]
+            if ((0 <= endRow && endRow < 8) && (0 <= endCol && endCol < 8)) {
+                let endPiece = this.board[endRow][endCol]
+                if (endPiece[0] != allyColor)
+                    movesKnight.push(new Move([r, c], [endRow, endCol], this.board))
+            }
+        })
+        return movesKnight
+    }
+
+    getQueenMoves (r, c) {
+        const movesRook = this.getRookMoves(r, c)
+        const movesBishop = this.getBishopMoves(r, c)
+        const movesQueen = movesRook.concat(movesBishop)
+        return movesQueen
+    }
+
+    getKingMoves (r, c) {
+        let movesKing = []
+        const kingMoves = [[-1, -1], [-1, 0], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]
+        const allyColor = this.whiteToMove ? 'w' : 'b'
+        for (let i = 0; i < 7; i++) {
+            let endRow = r + kingMoves[i][0]
+            let endCol = c + kingMoves[i][1]
+            if ((0 <= endRow && endRow < 8) && (0 <= endCol && endCol < 8)) {
+                let endPiece = this.board[endRow][endCol]
+                if (endPiece != allyColor)
+                    movesKing.push(new Move([r, c], [endRow, endCol], this.board))
+            }
+        }
+        return movesKing
+    }
 }
 
+playerDisplay.textContent = 'white'
 const GS = new GameState();
 let validMoves = GS.getValidMoves()
 let moveMade = false
-
 
 function loadImages() {
     const pieces = ["bR", "bN", "bB", "bQ", "bK", "bp", "wR", "wN", "wB", "wQ", "wK", "wp"]
@@ -258,6 +290,7 @@ function dragClick(event) {
             if (moveMade) {
                 validMoves = GS.getValidMoves()
                 moveMade = false
+                playerDisplay.textContent = GS.whiteToMove ? 'white' : 'black'
             }
         }
 
@@ -265,35 +298,8 @@ function dragClick(event) {
     }
 }
 
-function dragStart(event) {
-    dragClick(event)
-}
-
-function dragOver(event) {
-    event.preventDefault();
-}
-
-function dragDrop(event) {
-    event.stopPropagation();
-    dragClick(event)
-    
-    //changePlayer();
-
-    // if (correctGo) {
-    //     if (takenByOpponent && valid) {
-    //         return;
-    //     }
-
-    //     if (taken && !takenByOpponent) {
-    //         infoDisplay.textContent = "you cannot go here!";
-    //         setTimeout(() => infoDisplay = "", 2000);    
-    //         return;
-    //     }
-
-    //     if (valid) {
-    //         e.target.append(draggedElement);
-    //         changePlayer();
-    //         return;
-    //     }
-    // }
-}
+// funções que tratam o movimento de arrastar peças
+// validação de movimentos são tratados nas demais funções
+function dragStart(event)   {  dragClick(event);  }
+function dragOver(event)    {  event.preventDefault();  }
+function dragDrop(event)    {  event.stopPropagation();  dragClick(event);  }
