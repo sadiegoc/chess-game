@@ -35,13 +35,14 @@ class GameState {
         this.board = [
             ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
             ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
-            ["", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", ""],
-            ["", "", "", "", "", "", "", ""],
+            [ "",   "",   "",   "",   "",   "",   "",   "" ],
+            [ "",   "",   "",   "",   "",   "",   "",   "" ],
+            [ "",   "",   "",   "",   "",   "",   "",   "" ],
+            [ "",   "",   "",   "",   "",   "",   "",   "" ],
             ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
         ]
+
         this.whiteToMove = true
         this.moveLog = []
     }
@@ -60,16 +61,16 @@ class GameState {
 
     // todos os movimentos sem considerar os checks
     getAllPossibleMoves() {
-        const moves = []
+        let moves = []
         this.board.forEach((row, r)=> {
             row.forEach((col, c) => {
                 const turn = this.board[r][c][0]
                 if((turn == 'w' && this.whiteToMove) || (turn == 'b' && !this.whiteToMove)) {
                     const piece = this.board[r][c][1]
                     if (piece == 'p') { moves.push(this.getPawnMoves(r, c)) }
-                    // else if (piece == 'R') { this.getRookMoves(col, moves) }
+                    else if (piece == 'R') { moves.push(this.getRookMoves(r, c)) }
                     // else if (piece == 'N') { this.getRookMoves(col, moves) }
-                    // else if (piece == 'B') { this.getRookMoves(col, moves) }
+                    else if (piece == 'B') { moves.push(this.getBishopMoves(r, c)) }
                     // else if (piece == 'Q') { this.getRookMoves(col, moves) }
                     // else if (piece == 'K') { this.getRookMoves(col, moves) }
                 }
@@ -79,31 +80,95 @@ class GameState {
     }
 
     getPawnMoves(r, c) {
-        const movesPawn = []
-        if(this.whiteToMove) {
+        let movesPawn = []
+        if(this.whiteToMove) { // white moves
 
+            // move advanced
             if (this.board[r-1][c] == '') {
                 movesPawn.push((new Move([r, c], [r-1, c], this.board)))
                 if (r == 6 && this.board[r-2][c] == '')
                     movesPawn.push((new Move([r, c], [r-2, c], this.board)))
             }
 
+            // captures
             if (c - 1 >= 0)
-                if (this.board[r-1][c-1][0] == 'b')
-                    movesPawn.push((new Move([r, c], [r-1, c-1], this.board)))
+                if (this.board[r - 1][c - 1][0] == 'b')
+                    movesPawn.push((new Move([r, c], [r - 1, c - 1], this.board)))
             
             if (c + 1 <= 7)
-                if (this.board[r+1][c+1][0] == 'b')
-                    movesPawn.push((new Move([r, c], [r-1, c+1], this.board)))
+                if (this.board[r - 1][c + 1][0] == 'b')
+                    movesPawn.push((new Move([r, c], [r - 1, c + 1], this.board)))
             
+        } else { // black moves
+
+            // move advanced
+            if (this.board[r + 1][c] == '') {
+                movesPawn.push((new Move([r, c], [r + 1, c], this.board)))
+                if (r == 1 && this.board[r + 2][c] == '')
+                    movesPawn.push((new Move([r, c], [r + 2, c], this.board)))
+            }
+
+            // captures
+            if (c - 1 >= 0) // capture to left
+                if (this.board[r + 1][c - 1][0] == 'w')
+                    movesPawn.push((new Move([r, c], [r + 1, c - 1], this.board)))
+            
+            if (c + 1 <= 7) // capture to right
+                if (this.board[r + 1][c + 1][0] == 'w')
+                    movesPawn.push((new Move([r, c], [r + 1, c + 1], this.board)))
+
         }
         return movesPawn
+    }
+
+    getRookMoves(r, c) {
+        let movesRook = []
+        const directions = [[-1, 0], [0, -1], [1, 0], [0, 1]]
+        const enemyColor = this.whiteToMove ? 'b' : 'w'
+
+        directions.forEach(d => {
+            for (let i = 1; i < 8; i++) {
+                let endRow = r + (d[0] * i)
+                let endCol = c + (d[1] * i)
+                if ((0 <= endRow && endRow < 8) && (0 <= endCol && endCol < 8)) {
+                    let endPiece = this.board[endRow][endCol]
+                    if (endPiece == '')
+                        movesRook.push(new Move([r, c], [endRow, endCol], this.board))
+                    if (endPiece[0] == enemyColor)
+                        movesRook.push(new Move([r, c], [endRow, endCol], this.board))
+                }
+            }
+        })
+
+        return movesRook
+    }
+
+    getBishopMoves(r, c) {
+        let movesBishop = []
+        const directions = [[-1, -1], [-1, 1], [1, -1], [1, 1]]
+        const enemyColor = this.whiteToMove ? 'b' : 'w'
+
+        directions.forEach(d => {
+            for (let i = 1; i < 8; i++) {
+                let endRow = r + (d[0] * i)
+                let endCol = c + (d[1] * i)
+                if ((0 <= endRow && endRow < 8) && (0 <= endCol && endCol < 8)) {
+                    let endPiece = this.board[endRow][endCol]
+                    if (endPiece == '')
+                        movesBishop.push(new Move([r, c], [endRow, endCol], this.board))
+                    if (endPiece[0] == enemyColor)
+                        movesBishop.push(new Move([r, c], [endRow, endCol], this.board))
+                }
+            }
+        })
+
+        return movesBishop
     }
 }
 
 const GS = new GameState();
-const validMoves = GS.getValidMoves()
-const moveMade = false
+let validMoves = GS.getValidMoves()
+let moveMade = false
 
 
 function loadImages() {
@@ -122,7 +187,7 @@ function drawGameState(board) {
             const square = document.createElement('div')
             square.classList.add('square')
             
-            if(col != '') square.innerHTML = `<img src="${IMAGES[col]}" style="cursor: grab">`
+            if(col != '') square.innerHTML = `<img src="${IMAGES[col]}" style="cursor: pointer">`
             square.firstChild?.setAttribute('draggable', true)
             square.setAttribute('row', r)
             square.setAttribute('col', c)
@@ -139,60 +204,78 @@ createBoard()
 
 const allSquares = document.querySelectorAll(".square");
 allSquares.forEach(square => {
+    square.addEventListener('click', dragClick);
     square.addEventListener('dragstart', dragStart);
     square.addEventListener('dragover', dragOver);
     square.addEventListener('drop', dragDrop);
 })
 
+let playerClicks = null
 let startSq = []
-let draggedElement
-function dragStart(e) {
-    let startRow = e.target.parentNode.getAttribute('row');
-    let startCol = e.target.parentNode.getAttribute('col');
-    startSq = [startRow, startCol]
-    draggedElement = e.target
-}
-
-function dragOver(e) {
-    e.preventDefault();
-}
-
 let endSq = []
-function dragDrop(e) {
-    e.stopPropagation();
+let draggedElement
+function dragClick(event) {
+    if (!playerClicks) { // verifica se o jogador já fez o primeiro click
 
-    var endRow = e.target.getAttribute('row') || e.target.parentNode.getAttribute('row')
-    var endCol = e.target.getAttribute('col') || e.target.parentNode.getAttribute('col')
-    endSq = [ endRow, endCol ]
+        if (event.target.getAttribute('draggable')) {
+            let startRow = event.target.parentNode.getAttribute('row');
+            let startCol = event.target.parentNode.getAttribute('col');
+            startSq = [startRow, startCol]
+            playerClicks = [startSq]
+            draggedElement = event.target
+        }
 
-    if(e.target.getAttribute('draggable')) {
-        e.target.parentNode.append(draggedElement)
-        e.target.remove()
-    } else {
-        e.target.append(draggedElement);
-    }
+    } else { // caso já exista o primeiro click, então esse é o segundo (casa alvo)
 
-    const move = new Move(startSq, endSq, GS.board)
-    GS.makeMove(move)
+        var endRow = event.target.getAttribute('row') || event.target.parentNode.getAttribute('row')
+        var endCol = event.target.getAttribute('col') || event.target.parentNode.getAttribute('col')
+        endSq = [ endRow, endCol ]
 
-    validMoves.forEach(vm => {
-        vm.forEach(m => {
-            console.log(
-                (m.startRow == move.startRow) && (m.endRow == move.endRow) &&
-                (m.startCol == move.startCol) && (m.endCol == move.endCol)
-                )
+        if (endSq.toString() != startSq.toString()) { // verifica se clicou no mesmo lugar
             
-            // console.log(move)
-        })
-    })
+            validMoves.forEach(vm => {
+                vm.forEach(m => {
+                    const move = new Move(startSq, endSq, GS.board)
+                    // essa condição verifica se o movimento é válido, i.e., se está incluso
+                    // no array validMoves
+                    if( (m.startRow == move.startRow) && (m.endRow == move.endRow) &&
+                        (m.startCol == move.startCol) && (m.endCol == move.endCol) ) {
+                        
+                        // aqui é feito a troca de peças no tabuleiro
+                        if(event.target.getAttribute('draggable')) {
+                            event.target.parentNode.append(draggedElement)
+                            event.target.remove()
+                        } else {
+                            event.target.append(draggedElement);
+                        }
+            
+                        GS.makeMove(move)
+                        moveMade = true
+                    }
+                })
+            })
 
-    // console.log('validMoves: ', validMoves[4][1])
-    // console.log('moves', move)
+            if (moveMade) {
+                validMoves = GS.getValidMoves()
+                moveMade = false
+            }
+        }
 
-    if (moveMade) {
-        validMoves = GS.getValidMoves()
-        moveMade = false
+        playerClicks = null
     }
+}
+
+function dragStart(event) {
+    dragClick(event)
+}
+
+function dragOver(event) {
+    event.preventDefault();
+}
+
+function dragDrop(event) {
+    event.stopPropagation();
+    dragClick(event)
     
     //changePlayer();
 
