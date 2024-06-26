@@ -3,7 +3,7 @@
 
 <h4 align="center">:construction: Projeto em construção :construction:</h4>
 
-<h2 align="center">Implementar:</h2>
-* criação de user
-* gameplay online
-* IA para jogo offline
+<h4 align="left">Implementar:</h4>
+- `user`: Criar nome de usuário único cada vez que quiser jogar. Escolher adversário ou jogar com alguém aleatório.
+- `online`: Jogar contra outros usuários.
+- `offline`: Criar uma simples IA capaz de calcular movimentos simples para jogar contra um usuário offline.
